@@ -1,5 +1,7 @@
 [![Actions Status](https://github.com/frithnanth/raku-Math-Libgsl-Interpolation/workflows/test/badge.svg)](https://github.com/frithnanth/raku-Math-Libgsl-Interpolation/actions)
 
+![2D spline interpolation](examples/04-raw.png)
+
 NAME
 ====
 
