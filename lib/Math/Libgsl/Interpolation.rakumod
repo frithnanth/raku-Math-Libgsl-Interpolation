@@ -120,6 +120,7 @@ class TwoD {
     return $z;
   }
   method extrap(Num() $x, Num() $y --> Num) {
+    fail X::Libgsl.new: errno => GSL_FAILURE, error => "Error in extrap: version < v2.6" if $gsl-version < 2.6;
     my num64 $z;
     my $ret = gsl_interp2d_eval_extrap_e($!spline.interp, $!spline.xarr, $!spline.yarr, $!spline.zarr, $x, $y, $!xacc, $!yacc, $z);
     fail X::Libgsl.new: errno => GSL_FAILURE, error => 'Error evaluating the extrapolation' if $ret != GSL_SUCCESS;
