@@ -1,0 +1,207 @@
+#!/usr/bin/env perl6
+
+use Test;
+use Math::Libgsl::Constants;
+use NativeCall;
+use lib 'lib';
+use Math::Libgsl::Raw::Interpolation;
+
+my $*TOLERANCE = 10⁻¹²;
+
+subtest '1D Interpolation Functions' => {
+  my gsl_interp_type $t .= new;
+  ok nativesizeof($t) == 72, 'gsl_interp_type struct length';
+  my gsl_interp $itest .= new;
+  ok nativesizeof($itest) == 40, 'gsl_interp struct length';
+  my gsl_interp $i = mgsl_interp_alloc(LINEAR, 10);
+  isa-ok $i, gsl_interp, 'mgsl_interp_alloc returns a gsl_interp';
+  is gsl_interp_name($i), 'linear', 'extract interpolation type name';
+  my CArray[num64] $xa .= new: (^10)».Num;
+  my CArray[num64] $ya .= new: (^10)».Num;
+  ok gsl_interp_init($i, $xa, $ya, 10) == GSL_SUCCESS, 'initialize interpolation object';
+  ok gsl_interp_min_size($i) == 2, 'minimum number of points required';
+  ok mgsl_interp_type_min_size(LINEAR) == 2, 'minimum number of points required (from type)';
+  lives-ok { gsl_interp_free($i) }, 'deallocate struct';
+}
+
+subtest '1D Index Look-up and Acceleration' => {
+  my CArray[num64] $x .= new: (^5)».Num;
+  ok gsl_interp_bsearch($x, 1.5e0, 0, 4) == 1, 'bsearch';
+  my gsl_interp_accel $ia = gsl_interp_accel_alloc;
+  isa-ok $ia, gsl_interp_accel, 'gsl_interp_accel_alloc returns a gsl_interp_accel';
+  ok gsl_interp_accel_find($ia, $x, 4, 1.5e0) == 1, 'accelerated find';
+  ok gsl_interp_accel_reset($ia) == GSL_SUCCESS, 'reset struct';
+  lives-ok { gsl_interp_accel_free($ia) }, 'deallocate struct';
+}
+
+subtest '1D Evaluation of Interpolating Functions' => {
+  my CArray[num64] $x .= new: (^4)».Num;
+  my CArray[num64] $y .= new: (^4)».Num;
+  my gsl_interp_accel $ia = gsl_interp_accel_alloc;
+  my gsl_interp $i = mgsl_interp_alloc(LINEAR, 4);
+  gsl_interp_init($i, $x, $y, 4);
+  my num64 ($res, $deriv, $integ);
+  ok gsl_interp_eval_e($i, $x, $y, 1.5e0, $ia, $res) == GSL_SUCCESS && $res == 1.5e0, 'gsl_interp_eval';
+  ok gsl_interp_eval_deriv_e($i, $x, $y, 1.5e0, $ia, $deriv) == GSL_SUCCESS && $deriv == 1e0, 'gsl_interp_eval_deriv';
+  ok gsl_interp_eval_deriv2_e($i, $x, $y, 1.5e0, $ia, $deriv) == GSL_SUCCESS && $deriv == 0e0, 'gsl_interp_eval_deriv2';
+  ok gsl_interp_eval_integ_e($i, $x, $y, 0e0, 1.5e0, $ia, $integ) == GSL_SUCCESS && $integ == 1.125e0, 'gsl_interp_eval_integ';
+  gsl_interp_accel_free($ia);
+}
+
+subtest '1D Higher-level Interface' => {
+  my gsl_spline $s = mgsl_spline_alloc(LINEAR, 10);
+  isa-ok $s, gsl_spline, 'mgsl_spline_alloc returns a gsl_spline';
+  is gsl_spline_name($s), 'linear', 'extract spline type name';
+  my CArray[num64] $xa .= new: (^10)».Num;
+  my CArray[num64] $ya .= new: (^10)».Num;
+  ok gsl_spline_init($s, $xa, $ya, 10) == GSL_SUCCESS, 'initialize spline object';
+  ok gsl_spline_min_size($s) == 2, 'minimum number of points required';
+  my gsl_interp_accel $ia = gsl_interp_accel_alloc;
+  my num64 ($res, $deriv, $integ);
+  ok gsl_spline_eval_e($s, 1.5e0, $ia, $res) == GSL_SUCCESS && $res == 1.5e0, 'gsl_spline_eval';
+  ok gsl_spline_eval_deriv_e($s, 1.5e0, $ia, $deriv) == GSL_SUCCESS && $deriv == 1e0, 'gsl_spline_eval_deriv';
+  ok gsl_spline_eval_deriv2_e($s, 1.5e0, $ia, $deriv) == GSL_SUCCESS && $deriv == 0e0, 'gsl_spline_eval_deriv2';
+  ok gsl_spline_eval_integ_e($s, 0e0, 1.5e0, $ia, $integ) == GSL_SUCCESS && $integ == 1.125e0, 'gsl_spline_eval_integ';
+  gsl_interp_accel_free($ia);
+  lives-ok { gsl_spline_free($s) }, 'deallocate spline struct';
+}
+
+subtest '2D Interpolation Functions' => {
+  my gsl_interp2d_type $t .= new;
+  ok nativesizeof($t) == 88, 'gsl_interp2d_type struct length';
+  my gsl_interp2d $itest .= new;
+  ok nativesizeof($itest) == 64, 'gsl_interp2d struct length';
+  my gsl_interp2d $i = mgsl_interp2d_alloc(BILINEAR, 10, 10);
+  isa-ok $i, gsl_interp2d, 'mgsl_interp2d_alloc returns a gsl_interp2d';
+  is gsl_interp2d_name($i), 'bilinear', 'extract interpolation type name';
+  my CArray[num64] $xa .= new: (^10)».Num;
+  my CArray[num64] $ya .= new: (^10)».Num;
+  my CArray[num64] $za .= new: (^100)».Num;
+  ok gsl_interp2d_init($i, $xa, $ya, $za, 10, 10) == GSL_SUCCESS, 'initialize interpolation object';
+  ok gsl_interp2d_min_size($i) == 2, 'minimum number of points required';
+  ok mgsl_interp2d_type_min_size(BILINEAR) == 2, 'minimum number of points required (from type)';
+  lives-ok { gsl_interp2d_free($i) }, 'deallocate struct';
+}
+
+subtest '2D Interpolation Grids' => {
+  my CArray[num64] $za .= new: (^100)».Num;
+  my gsl_interp2d $i = mgsl_interp2d_alloc(BILINEAR, 10, 10);
+  ok gsl_interp2d_set($i, $za, 1, 1, 20e0) == GSL_SUCCESS && gsl_interp2d_get($i, $za, 1, 1) == 20, 'get & set grid';
+  ok gsl_interp2d_idx($i, 1, 1) == 11, 'index of a grid point';
+  gsl_interp2d_free($i);
+}
+
+subtest '2D Evaluation of Interpolating Functions' => {
+  my CArray[num64] $xarr .= new: 0e0, 1e0, 2e0, 3e0;
+  my CArray[num64] $yarr .= new: 0e0, 1e0, 2e0, 3e0;
+  my CArray[num64] $zarr .= new: 1.0e0, 1.1e0, 1.2e0, 1.3e0, 1.1e0, 1.2e0, 1.3e0, 1.4e0,
+                                 1.2e0, 1.3e0, 1.4e0, 1.5e0, 1.3e0, 1.4e0, 1.5e0, 1.6e0;
+  my $xsize = $xarr.elems;
+  my $ysize = $yarr.elems;
+  my $zsize = $zarr.elems;
+  my gsl_interp2d $i = mgsl_interp2d_alloc(BILINEAR, $xsize, $ysize);
+  my gsl_interp_accel $xa = gsl_interp_accel_alloc;
+  my gsl_interp_accel $ya = gsl_interp_accel_alloc;
+  gsl_interp2d_init($i, $xarr, $yarr, $zarr, $xsize, $ysize);
+
+  my $evalarr = CArray[num64].allocate($zsize);
+  my $extraparr = CArray[num64].allocate($zsize);
+  my $derivxarr = CArray[num64].allocate($zsize);
+  my $derivyarr = CArray[num64].allocate($zsize);
+  my $derivxxarr = CArray[num64].allocate($zsize);
+  my $derivyyarr = CArray[num64].allocate($zsize);
+  my $derivxyarr = CArray[num64].allocate($zsize);
+  my num64 $res;
+  for ^$xsize -> $xi {
+    my num64 $x = $xarr[$xi];
+    for ^$ysize -> $yi {
+      my num64 $y = $yarr[$yi];
+      my $zi = gsl_interp2d_idx($i, $xi, $yi);
+      gsl_interp2d_eval_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $evalarr[$zi] = $res;
+      gsl_interp2d_eval_extrap_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $extraparr[$zi] = $res;
+      gsl_interp2d_eval_deriv_x_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $derivxarr[$zi] = $res;
+      gsl_interp2d_eval_deriv_y_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $derivyarr[$zi] = $res;
+      gsl_interp2d_eval_deriv_xx_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $derivxxarr[$zi] = $res;
+      gsl_interp2d_eval_deriv_yy_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $derivyyarr[$zi] = $res;
+      gsl_interp2d_eval_deriv_xy_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
+      $derivxyarr[$zi] = $res;
+    }
+  }
+  is-deeply $evalarr.list, $zarr.list, 'gsl_interp2d_eval_e';
+  is-deeply $extraparr.list, $zarr.list, 'gsl_interp2d_eval_extrap_e';
+  ok ($derivxarr.list Z≅ (.1e0 xx 16)), 'gsl_interp2d_eval_deriv_x_e';
+  ok ($derivyarr.list Z≅ (.1e0 xx 16)), 'gsl_interp2d_eval_deriv_y_e';
+  ok ($derivxxarr.list Z≅ (0e0 xx 16)), 'gsl_interp2d_eval_deriv_xx_e';
+  ok ($derivyyarr.list Z≅ (0e0 xx 16)), 'gsl_interp2d_eval_deriv_yy_e';
+  ok ($derivxyarr.list Z≅ (0e0 xx 16)), 'gsl_interp2d_eval_deriv_xy_e';
+
+  gsl_interp_accel_free($xa);
+  gsl_interp_accel_free($ya);
+  gsl_interp2d_free($i);
+}
+
+subtest '2D Higher-level Interface' => {
+  my CArray[num64] $xarr .= new: 0e0, 1e0, 2e0, 3e0;
+  my CArray[num64] $yarr .= new: 0e0, 1e0, 2e0, 3e0;
+  my CArray[num64] $zarr .= new: 1.0e0, 1.1e0, 1.2e0, 1.3e0, 1.1e0, 1.2e0, 1.3e0, 1.4e0,
+                                 1.2e0, 1.3e0, 1.4e0, 1.5e0, 1.3e0, 1.4e0, 1.5e0, 1.6e0;
+  my $xsize = $xarr.elems;
+  my $ysize = $yarr.elems;
+  my $zsize = $zarr.elems;
+  my gsl_interp2d $i = mgsl_interp2d_alloc(BILINEAR, $xsize, $ysize);
+  my gsl_interp_accel $xa = gsl_interp_accel_alloc;
+  my gsl_interp_accel $ya = gsl_interp_accel_alloc;
+  my gsl_spline2d $s = mgsl_spline2d_alloc(BILINEAR, $xsize, $ysize);
+  gsl_spline2d_init($s, $xarr, $yarr, $zarr, $xsize, $ysize);
+  isa-ok $s, gsl_spline2d, 'mgsl_spline2d_alloc returns a gsl_spline2d';
+  is gsl_spline2d_name($s), 'bilinear', 'extract spline2d type name';
+
+  my $splinearr = CArray[num64].allocate($zsize);
+  my $splinexarr = CArray[num64].allocate($zsize);
+  my $splineyarr = CArray[num64].allocate($zsize);
+  my $splinexxarr = CArray[num64].allocate($zsize);
+  my $splineyyarr = CArray[num64].allocate($zsize);
+  my $splinexyarr = CArray[num64].allocate($zsize);
+  my num64 $res;
+  for ^$xsize -> $xi {
+    my num64 $x = $xarr[$xi];
+    for ^$ysize -> $yi {
+      my num64 $y = $yarr[$yi];
+      my $zi = gsl_interp2d_idx($i, $xi, $yi);
+      gsl_spline2d_eval_e($s, $x, $y, $xa, $ya, $res);
+      $splinearr[$zi] = $res;
+      gsl_spline2d_eval_deriv_x_e($s, $x, $y, $xa, $ya, $res);
+      $splinexarr[$zi] = $res;
+      gsl_spline2d_eval_deriv_y_e($s, $x, $y, $xa, $ya, $res);
+      $splineyarr[$zi] = $res;
+      gsl_spline2d_eval_deriv_xx_e($s, $x, $y, $xa, $ya, $res);
+      $splinexxarr[$zi] = $res;
+      gsl_spline2d_eval_deriv_yy_e($s, $x, $y, $xa, $ya, $res);
+      $splineyyarr[$zi] = $res;
+      gsl_spline2d_eval_deriv_xy_e($s, $x, $y, $xa, $ya, $res);
+      $splinexyarr[$zi] = $res;
+    }
+  }
+  is-deeply $splinearr.list, $zarr.list, 'gsl_spline2d_eval_e';
+  ok ($splinexarr.list Z≅ (.1e0 xx 16)), 'gsl_spline2d_eval_deriv_x_e';
+  ok ($splineyarr.list Z≅ (.1e0 xx 16)), 'gsl_spline2d_eval_deriv_y_e';
+  ok ($splinexxarr.list Z≅ (0e0 xx 16)), 'gsl_spline2d_eval_deriv_xx_e';
+  ok ($splineyyarr.list Z≅ (0e0 xx 16)), 'gsl_spline2d_eval_deriv_yy_e';
+  ok ($splinexyarr.list Z≅ (0e0 xx 16)), 'gsl_spline2d_eval_deriv_xy_e';
+
+  ok gsl_spline2d_set($s, $zarr, 0, 0, 100e0) == GSL_SUCCESS, 'gsl_spline2d_set';
+  ok gsl_spline2d_get($s, $zarr, 0, 0) == 100e0, 'gsl_spline2d_get';
+
+  gsl_interp_accel_free($xa);
+  gsl_interp_accel_free($ya);
+  gsl_interp2d_free($i);
+  lives-ok { gsl_spline2d_free($s) }, 'deallocate spline2d struct';
+}
+
+done-testing;

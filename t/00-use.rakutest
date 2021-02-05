@@ -1,0 +1,9 @@
+#!/usr/bin/env raku
+
+use Test;
+use lib 'lib';
+
+use-ok 'Math::Libgsl::Raw::Interpolation';
+use-ok 'Math::Libgsl::Interpolation';
+
+done-testing;

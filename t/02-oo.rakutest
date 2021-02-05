@@ -1,0 +1,109 @@
+#!/usr/bin/env perl6
+
+use Test;
+use Math::Libgsl::Constants;
+use Math::Libgsl::Exception;
+use lib 'lib';
+use Math::Libgsl::Interpolation;
+
+my $*TOLERANCE = 10⁻¹²;
+
+subtest '1D basic interpolation methods' => {
+  my Num @xarray = (^5)».Num;
+  ok bsearch(@xarray, 1.5, 0, 4) == 1, 'bsearch - 4 args';
+  ok bsearch(@xarray, 1.5) == 1, 'bsearch - 2 args';
+  my Math::Libgsl::Interpolation::OneD $i .= new: LINEAR, 5;
+  isa-ok $i, Math::Libgsl::Interpolation::OneD, 'new 1D interpolation object';
+  my Num @yarray = (^5)».Num;
+  isa-ok $i.init(@xarray, @yarray), Math::Libgsl::Interpolation::OneD, 'initialize interpolation';
+  ok $i.min-size == 2, 'minimum number of points required (method)';
+  ok min-size(AKIMA) == 5, 'minimum number of points required (sub)';
+  ok min-size1d(AKIMA) == 5, 'minimum number of points required (sub, alternative form)';
+  is $i.name, 'linear', 'interpolation type name';
+  ok $i.find(@xarray, 1.5) == 1, 'accelerated find';
+  isa-ok $i.reset, Math::Libgsl::Interpolation::OneD, 'reset acceleration object';
+}
+
+subtest '1D interpolation evaluation' => {
+  my Num @xarray = (^10)».Num;
+  my Num @yarray = (^10)».Num;
+  my $i = Math::Libgsl::Interpolation::OneD.new(:type(LINEAR), :10size).init(@xarray, @yarray);
+  isa-ok $i, Math::Libgsl::Interpolation::OneD, 'new 1D interpolation object';
+  ok $i.min-size == 2, 'minimum number of points required';
+  is $i.name, 'linear', 'interpolation type name';
+  ok $i.eval(1.5) == 1.5, 'evaluate interpolation';
+  ok $i.eval-deriv(1.5) == 1, 'evaluate derivative of interpolation';
+  ok $i.eval-deriv2(1.5) == 0, 'evaluate second derivative of interpolation';
+  ok $i.eval-integ(0, 1.5) == 1.125, 'evaluate integral of interpolation';
+}
+
+subtest '2D basic interpolation methods' => {
+  my Math::Libgsl::Interpolation::TwoD $i .= new: BILINEAR, 5, 5;
+  isa-ok $i, Math::Libgsl::Interpolation::TwoD, 'new 2D interpolation object';
+  my Num @xarray = (^5)».Num;
+  my Num @yarray = (^5)».Num;
+  my Num @zarray = (^25)».Num;
+  isa-ok $i.init(@xarray, @yarray, @zarray), Math::Libgsl::Interpolation::TwoD, 'initialize interpolation';
+  my Num @warray = (^4)».Num;
+  throws-like { $i.init(@xarray, @yarray, @warray) },
+      X::TypeCheck::Binding::Parameter,
+      message => /'Constraint type check failed'/,
+      'fails if zarray has the wrong length';
+  throws-like { $i.init(@warray, @yarray, @zarray) },
+      X::TypeCheck::Binding::Parameter,
+      message => /'Constraint type check failed'/,
+      'fails if xarray has the wrong length';
+  my Num @wxarray = 0e0, 2e0, 1e0, 3e0, 4e0;
+  throws-like { $i.init(@wxarray, @yarray, @zarray) },
+      X::TypeCheck::Binding::Parameter,
+      message => /'Constraint type check failed'/,
+      'fails if xarray is not monotonic';
+  ok $i.min-size == 2, 'minimum number of points required (method)';
+  ok min-size2d(BICUBIC) == 4, 'minimum number of points required (sub)';
+  is $i.name, 'bilinear', 'interpolation type name';
+}
+
+subtest '2D interpolation evaluation' => {
+  my Num @xarray = (^4)».Num;
+  my Num @yarray = (^4)».Num;
+  my Num @zarray = 1.0e0, 1.1e0, 1.2e0, 1.3e0, 1.1e0, 1.2e0, 1.3e0, 1.4e0,
+                   1.2e0, 1.3e0, 1.4e0, 1.5e0, 1.3e0, 1.4e0, 1.5e0, 1.6e0;
+  my Num (@evalarr, @derivxarr, @derivyarr, @derivxxarr, @derivyyarr, @derivxyarr);
+  my Num $res;
+
+  my $i = Math::Libgsl::Interpolation::TwoD.new(:type(BILINEAR), :4xsize, :4ysize);
+  isa-ok $i, Math::Libgsl::Interpolation::TwoD, 'new 2D interpolation object';
+  isa-ok $i.init(@xarray, @yarray, @zarray), Math::Libgsl::Interpolation::TwoD, 'initialize interpolation';
+  is $i.name, 'bilinear', 'interpolation type name';
+  ok $i.min-size == 2, 'minimum number of points required';
+
+  my $xsize = @xarray.elems;
+  my $ysize = @yarray.elems;
+  for ^$xsize -> $xi {
+    my Num $x = @xarray[$xi];
+    for ^$ysize -> $yi {
+      my Num $y = @yarray[$yi];
+      my $zi = $yi * $xsize + $xi;
+      $res = $i.eval($x, $y);
+      @evalarr[$zi] = $res;
+      $res = $i.deriv-x($x, $y);
+      @derivxarr[$zi] = $res;
+      $res = $i.deriv-y($x, $y);
+      @derivyarr[$zi] = $res;
+      $res = $i.deriv-xx($x, $y);
+      @derivxxarr[$zi] = $res;
+      $res = $i.deriv-yy($x, $y);
+      @derivyyarr[$zi] = $res;
+      $res = $i.deriv-xy($x, $y);
+      @derivxyarr[$zi] = $res;
+    }
+  }
+  is-deeply @evalarr, @zarray, 'evaluate interpolation';
+  ok (@derivxarr Z≅ (.1e0 xx 16)), 'evaluate x-derivative of interpolation';
+  ok (@derivyarr Z≅ (.1e0 xx 16)), 'evaluate y-derivative of interpolation';
+  ok (@derivxxarr Z≅ (0e0 xx 16)), 'evaluate xx-derivative of interpolation';
+  ok (@derivyyarr Z≅ (0e0 xx 16)), 'evaluate yy-derivative of interpolation';
+  ok (@derivxyarr Z≅ (0e0 xx 16)), 'evaluate xy-derivative of interpolation';
+}
+
+done-testing;
