@@ -78,9 +78,9 @@ class gsl_interp2d is repr('CStruct') is export {
 
 class gsl_spline2d is repr('CStruct') is export {
   HAS gsl_interp2d   $.interp;
-  has Pointer[num64] $.xarr;
-  has Pointer[num64] $.yarr;
-  has Pointer[num64] $.zarr;
+  has CArray[num64]  $.xarr;
+  has CArray[num64]  $.yarr;
+  has CArray[num64]  $.zarr;
 }
 
 # 1D Interpolation Functions

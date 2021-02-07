@@ -109,6 +109,7 @@ class TwoD {
     fail X::Libgsl.new: errno => GSL_FAILURE, error => 'Error initializing the interpolation' if $ret != GSL_SUCCESS;
     self;
   }
+  method zidx(UInt $x, UInt $y --> UInt) { gsl_interp2d_idx($!spline.interp, $x, $y) }
   method min-size(--> UInt) { gsl_spline2d_min_size($!spline) }
   method name(--> Str) { gsl_spline2d_name($!spline) }
   method eval(Num() $x where $!spline.interp.xmin ≤ * ≤ $!spline.interp.xmax,
@@ -262,8 +263,12 @@ This B<multi method> constructor requires three simple or named arguments, the t
 This method initializes the interpolation internal data using the X, Y, and Z coordinate arrays.
 It must be called each time one wants to use the object to evaluate interpolation points on another data set.
 The X and Y arrays have to be strictly ordered, with increasing values.
-The Z array, which represents a grid, must have a dimension of size xsize * ysize. The position of grid point (x, y) is given by y * xsize + x.
+The Z array, which represents a grid, must have a dimension of size xsize * ysize. The position of grid point (x, y) is given by y * xsize + x (see also the zidx method).
 This method returns B<self>, so it may be chained.
+
+=head3 zidx(UInt $x, UInt $y --> UInt)
+
+This method returns the index of the Z array element corresponding to grid coordinates (x, y).
 
 =head3 min-size(--> UInt)
 

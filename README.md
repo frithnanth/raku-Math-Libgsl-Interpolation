@@ -92,7 +92,11 @@ This **multi method** constructor requires three simple or named arguments, the 
 
 ### init(Num() @xarray where ([<] @xarray), Num() @yarray where ([<] @yarray), Num() @zarray where *.elems == @xarray.elems * @yarray.elems --> Math::Libgsl::Interpolation::TwoD)
 
-This method initializes the interpolation internal data using the X, Y, and Z coordinate arrays. It must be called each time one wants to use the object to evaluate interpolation points on another data set. The X and Y arrays have to be strictly ordered, with increasing values. The Z array, which represents a grid, must have a dimension of size xsize * ysize. The position of grid point (x, y) is given by y * xsize + x. This method returns **self**, so it may be chained.
+This method initializes the interpolation internal data using the X, Y, and Z coordinate arrays. It must be called each time one wants to use the object to evaluate interpolation points on another data set. The X and Y arrays have to be strictly ordered, with increasing values. The Z array, which represents a grid, must have a dimension of size xsize * ysize. The position of grid point (x, y) is given by y * xsize + x (see also the zidx method). This method returns **self**, so it may be chained.
+
+### zidx(UInt $x, UInt $y --> UInt)
+
+This method returns the index of the Z array element corresponding to grid coordinates (x, y).
 
 ### min-size(--> UInt)
 

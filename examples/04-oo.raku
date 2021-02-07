@@ -3,7 +3,6 @@
 # See "GNU Scientific Library" manual Chapter 30 Interpolation, Paragraph 30.14
 
 use Math::Libgsl::Constants;
-use lib 'lib';
 use Math::Libgsl::Interpolation;
 
 my constant N = 100;
@@ -16,10 +15,10 @@ my $ny = @ya.elems;
 my $spline = Math::Libgsl::Interpolation::TwoD.new(:type(BILINEAR), :xsize($nx), :ysize($ny));
 
 # set z grid values
-@za[0] = 0e0;
-@za[2] = 1e0;
-@za[3] = .5e0;
-@za[1] = 1e0;
+@za[$spline.zidx(0, 0)] = 0e0;
+@za[$spline.zidx(0, 1)] = 1e0;
+@za[$spline.zidx(1, 1)] = .5e0;
+@za[$spline.zidx(1, 0)] = 1e0;
 
 $spline.init: @xa, @ya, @za;
 
