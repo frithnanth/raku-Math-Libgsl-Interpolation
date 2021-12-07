@@ -1,4 +1,4 @@
-unit class Math::Libgsl::Interpolation:ver<0.0.1>:auth<cpan:FRITH>;
+unit class Math::Libgsl::Interpolation:ver<0.0.1>:auth<zef:frithnanth>;
 
 use NativeCall;
 use Math::Libgsl::Constants;
