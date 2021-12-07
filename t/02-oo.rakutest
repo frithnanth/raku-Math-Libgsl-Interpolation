@@ -104,7 +104,7 @@ subtest '2D interpolation evaluation' => {
   ok (@derivxxarr Z≅ (0e0 xx 16)), 'evaluate xx-derivative of interpolation';
   ok (@derivyyarr Z≅ (0e0 xx 16)), 'evaluate yy-derivative of interpolation';
   ok (@derivxyarr Z≅ (0e0 xx 16)), 'evaluate xy-derivative of interpolation';
-  if $gsl-version > 2.5 {
+  if $gsl-version > v2.5 {
     ok $i.extrap(5, 5) == 2, 'evaluate extrapolation';
   }
   ok $i.zidx(0,0) == 0 && $i.zidx(1,0) == 1 && $i.zidx(0,1) == 4 && $i.zidx(1,1) == 5, 'index of grid point (x,y)';

@@ -119,7 +119,7 @@ subtest '2D Evaluation of Interpolating Functions' => {
       my $zi = gsl_interp2d_idx($i, $xi, $yi);
       gsl_interp2d_eval_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
       $evalarr[$zi] = $res;
-      if $gsl-version > 2.5 {
+      if $gsl-version > v2.5 {
         gsl_interp2d_eval_extrap_e($i, $xarr, $yarr, $zarr, $x, $y, $xa, $ya, $res);
         $extraparr[$zi] = $res;
       }
@@ -136,7 +136,7 @@ subtest '2D Evaluation of Interpolating Functions' => {
     }
   }
   is-deeply $evalarr.list, $zarr.list, 'gsl_interp2d_eval_e';
-  if $gsl-version > 2.5 {
+  if $gsl-version > v2.5 {
     is-deeply $extraparr.list, $zarr.list, 'gsl_interp2d_eval_extrap_e';
   }
   ok ($derivxarr.list Z≅ (.1e0 xx 16)), 'gsl_interp2d_eval_deriv_x_e';
