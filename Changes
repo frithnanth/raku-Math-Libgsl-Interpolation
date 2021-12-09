@@ -2,6 +2,9 @@ Revision history for Math-Libgsl-Interpolation
 
 {{$NEXT}}
 
+0.0.3  2021-12-09T11:27:42+01:00
+    - Change :auth field
+
 0.0.2  2021-12-07T19:28:03+01:00
     - Add extrap() method to compute extrapolation
     - Add zidx() method to compute the Z array index given its (x,y) position
