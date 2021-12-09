@@ -29,7 +29,7 @@
   "resources": [
     "libraries/gslhelper"
   ],
-  "source-url": "git://github.com/FRITH/raku-Math-Libgsl-Interpolation.git",
+  "source-url": "git://github.com/frithnanth/raku-Math-Libgsl-Interpolation.git",
   "tags": [
     "math",
     "nativecall"
