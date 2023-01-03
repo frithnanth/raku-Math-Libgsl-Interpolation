@@ -1,6 +1,8 @@
 Revision history for Math-Libgsl-Interpolation
 
 {{$NEXT}}
+
+0.1.0  2023-01-03T13:02:17Z
     - Methods that return self throw on error, instead of failing
 
 0.0.3  2021-12-09T11:27:42+01:00

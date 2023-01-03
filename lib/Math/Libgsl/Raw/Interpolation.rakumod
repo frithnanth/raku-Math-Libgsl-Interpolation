@@ -1,6 +1,6 @@
 use v6;
 
-unit module Math::Libgsl::Raw::Interpolation:ver<0.0.3>:auth<zef:FRITH>;
+unit module Math::Libgsl::Raw::Interpolation:ver<0.1.0>:auth<zef:FRITH>;
 
 use NativeCall;
 
