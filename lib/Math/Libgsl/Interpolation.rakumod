@@ -34,7 +34,7 @@ class OneD {
     my CArray[num64] $xarr .= new: @xarray;
     my CArray[num64] $yarr .= new: @yarray;
     my $ret = gsl_spline_init($!spline, $xarr, $yarr, @xarray.elems);
-    fail X::Libgsl.new: errno => GSL_FAILURE, error => 'Error initializing the interpolation' if $ret != GSL_SUCCESS;
+    X::Libgsl.new(errno => GSL_FAILURE, error => 'Error initializing the interpolation').throw if $ret != GSL_SUCCESS;
     self;
   }
   method min-size(--> UInt) { gsl_spline_min_size($!spline) }
@@ -45,7 +45,7 @@ class OneD {
   }
   method reset(--> Math::Libgsl::Interpolation::OneD) {
     my $ret = gsl_interp_accel_reset($!accel);
-    fail X::Libgsl.new: errno => GSL_FAILURE, error => 'Error resetting the acceleration object' if $ret != GSL_SUCCESS;
+    X::Libgsl.new(errno => GSL_FAILURE, error => 'Error resetting the acceleration object').throw if $ret != GSL_SUCCESS;
     self;
   }
   method eval(Num() $x where $!spline.interp.xmin ≤ * ≤ $!spline.interp.xmax --> Num) {
@@ -106,7 +106,7 @@ class TwoD {
     my CArray[num64] $yarr .= new: @yarray;
     my CArray[num64] $zarr .= new: @zarray;
     my $ret = gsl_spline2d_init($!spline, $xarr, $yarr, $zarr, @xarray.elems, @yarray.elems);
-    fail X::Libgsl.new: errno => GSL_FAILURE, error => 'Error initializing the interpolation' if $ret != GSL_SUCCESS;
+    X::Libgsl.new(errno => GSL_FAILURE, error => 'Error initializing the interpolation').throw if $ret != GSL_SUCCESS;
     self;
   }
   method zidx(UInt $x, UInt $y --> UInt) { gsl_interp2d_idx($!spline.interp, $x, $y) }
@@ -210,6 +210,8 @@ This module exports two classes:
 =head3 new(Int :$type!, Int :$size!)
 
 This B<multi method> constructor requires two simple or named arguments, the type of interpolation and the size of the array of data points.
+
+All the following methods I<throw> on error if they return B<self>, otherwise they I<fail> on error.
 
 =head3 init(Num() @xarray where ([<] @xarray), Num() @yarray --> Math::Libgsl::Interpolation::OneD)
 

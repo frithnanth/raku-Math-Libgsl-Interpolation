@@ -43,6 +43,8 @@ Math::Libgsl::Interpolation::OneD
 
 This **multi method** constructor requires two simple or named arguments, the type of interpolation and the size of the array of data points.
 
+All the following methods *throw* on error if they return **self**, otherwise they *fail* on error.
+
 ### init(Num() @xarray where ([<] @xarray), Num() @yarray --> Math::Libgsl::Interpolation::OneD)
 
 This method initializes the interpolation internal data using the X and Y coordinate arrays. It must be called each time one wants to use the object to evaluate interpolation points on another data set. The X array has to be strictly ordered, with increasing x values. This method returns **self**, so it may be chained.
@@ -157,8 +159,8 @@ Prerequisites
 
 This module requires the libgsl library to be installed. Please follow the instructions below based on your platform:
 
-Debian Linux and Ubuntu 20.04
------------------------------
+Debian Linux and Ubuntu 20.04+
+------------------------------
 
     sudo apt install libgsl23 libgsl-dev libgslcblas0
 
